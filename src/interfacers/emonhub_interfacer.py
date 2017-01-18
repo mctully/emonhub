@@ -308,13 +308,13 @@ class EmonHubInterfacer(threading.Thread):
         # Normal operation is dest from txc.nodeid
         if txc.target:
             dest = str(txc.target)
-            # self._log.info("dest from txc.target: "+dest)
+            self._log.info("dest from txc.target: "+dest)
         else:
             dest = str(txc.nodeid)
-            # self._log.info("dest from txc.nodeid: "+dest)
+            self._log.info("dest from txc.nodeid: "+dest)
 
-        # self._log.info("Target: "+dest)
-        # self._log.info("Realdata: "+json.dumps(txc.realdata))
+        self._log.info("Target: "+dest)
+        self._log.info("Realdata: "+json.dumps(txc.realdata))
 
         # check if node is listed and has individual scales for each value
         if dest in ehc.nodelist and 'tx' in ehc.nodelist[dest] and 'scales' in ehc.nodelist[dest]['tx']:
@@ -356,7 +356,7 @@ class EmonHubInterfacer(threading.Thread):
                 scaled.append(val)
 
 
-        # self._log.info("Scaled: "+json.dumps(scaled))
+        self._log.info("Scaled: "+json.dumps(scaled))
 
         # check if node is listed and has individual datacodes for each value
         if (dest in ehc.nodelist and 'tx' in ehc.nodelist[dest] and 'datacodes' in ehc.nodelist[dest]['tx']):
@@ -412,7 +412,10 @@ class EmonHubInterfacer(threading.Thread):
                 count = len(scaled) #/ ehc.check_datacode(datacode)
 
         if not encoded:
-            encoded.append(dest)
+            # MT HACK 17/1/17
+            # looks like the tx format has changed to have the node ID at the start
+            # this isn't the protocol my node speaks, so alter it here
+            # encoded.append(dest) # MT COMMENT OUT
             for i in range(0, count, 1):
                 # Use single datacode unless datacode = False then use datacodes
                 dc = str(datacode)
@@ -421,8 +424,9 @@ class EmonHubInterfacer(threading.Thread):
 
                 for b in ehc.encode(dc,int(scaled[i])):
                     encoded.append(b)
+            encoded.append(dest) # MT ADDED
 
-        # self._log.info("Encoded: "+json.dumps(encoded))
+        self._log.info("Encoded: "+json.dumps(encoded))
 
         txc.encoded.update({self.getName():encoded})
         return txc

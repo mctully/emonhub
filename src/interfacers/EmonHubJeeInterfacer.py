@@ -251,7 +251,10 @@ class EmonHubJeeInterfacer(ehi.EmonHubSerialInterfacer):
             if int(value) < 0 or int(value) > 255:
                 self._log.warning(self.name + " discarding Tx packet: values out of scope" )
                 return
-            payload += str(int(value))+","
+            # MT bug fix? shouldn't have a , before the cmd
+            if payload != "":
+                payload += ","
+            payload += str(int(value))
                 
         payload += cmd
         
